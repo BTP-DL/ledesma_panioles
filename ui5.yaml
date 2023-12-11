@@ -20,8 +20,8 @@ server:
             url: https://sfid.ledesma.com.ar:60500/
             client: '250'
             destination: DEV_MOD_250
-          - path: /catalog
-            url: https://filemanangerte.dest
+          - path: /dms
+            url: https://DMS_PANIOLES.dest
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:

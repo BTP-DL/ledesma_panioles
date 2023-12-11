@@ -1,105 +1,67 @@
-sap.ui.define([
-    "sap/ui/base/Object",
-    "sap/ui/model/json/JSONModel",
-    "sap/ui/model/Filter",
-    "sap/ui/model/FilterOperator"
-], function (Object, JSONModel, Filter, FilterOperator) {
+sap.ui.define([], function () {
     "use strict";
-    return Object.extend("ar.ledesma.fiori.mm.panioles.entregas.utils.fileManager", {
-        constructor: function (service, authClient, authSecret, tokenUrl, repositoryId, dmsUrl) {
+    return {
+        _urlDMS: null,
 
-            this.oServiceInstance = service
-            this.repositoryId = repositoryId
-            this.authClient = authClient
-            this.authSecret = authSecret
-            this.tokenUrl = tokenUrl
-            this.dmsUrl = dmsUrl
-
-            this.oCredentials = {
-                "credentials_authClient": this.authClient,
-                "credentials_authSecret": this.authSecret,
-                "credentials_tokenUrl": this.tokenUrl,
-                "credentials_repositoryId": this.repositoryId,
-                "credentials_dmsUrl": this.dmsUrl
-            }
-
+        setUrl: function (urlDMS) {
+            this._urlDMS = urlDMS;
         },
-        _createFilter: function (sField, sValue) {
-            let oFiltro = new sap.ui.model.Filter({
-                path: sField,
-                operator: FilterOperator.EQ,
-                value1: sValue
+
+        createFolder: async function (folder, path) {
+            const url = `${this._urlDMS}/${path}`;
+            const oForm = new FormData();
+            oForm.append("cmisaction", "createFolder");
+            oForm.append("propertyId[0]", "cmis:name");
+            oForm.append("propertyValue[0]", folder);
+            oForm.append("propertyId[1]", "cmis:objectTypeId");
+            oForm.append("propertyValue[1]", "cmis:folder");
+            const resp = await fetch(url, {
+                method: "POST",
+                body: oForm,
             });
-            return oFiltro;
+            return await resp.json();
         },
-        getImage: function (filename, path) {
-            return new Promise(async (resolve, reject) => {
-                let filenameFilter = this._createFilter("filename", filename);
-                let pathFilter = this._createFilter("path", path);
-                let repositoryId = this._createFilter("credentials_repositoryId", this.repositoryId);
-                let authClient = this._createFilter("credentials_authClient", this.authClient);
-                let authSecret = this._createFilter("credentials_authSecret", this.authSecret);
-                let tokenUrl = this._createFilter("credentials_tokenUrl", this.tokenUrl);
-                let dmsUrl = this._createFilter("credentials_dmsUrl", this.dmsUrl);
 
-                this.oServiceInstance.read("/getImage", {
-                    filters: [filenameFilter, pathFilter, repositoryId, authClient, authSecret, tokenUrl, dmsUrl],
-                    success: function (res) {
-                        resolve(res)
-                    },
-                    error: function (err) {
-                        console.log(err)
-                        reject(err)
-                     
-                    }
+        uploadImageToFolder: async function (folderPath, filename, b64Content) {
+            const url = `${this._urlDMS}/${folderPath}`;
 
-                });
+            const oForm = new FormData();
+            oForm.append("cmisaction", "createDocument");
+            oForm.append("propertyId[0]", "cmis:name");
+            oForm.append("propertyValue[0]", filename);
+            oForm.append("propertyId[1]", "cmis:objectTypeId");
+            oForm.append("propertyValue[1]", "cmis:document");
+            oForm.append("_charset_", "UTF-8");
+            oForm.append("includeAllowableActions", true);
+            oForm.append("succinct", true);
+            oForm.append("media", b64Content);
+
+            const resp = await fetch(url, {
+                method: "POST",
+                body: oForm,
             });
-        },
-        createFolder: function (folderName, path) {
-            const oPayload = { ...this.oCredentials };
-            oPayload.folderName = folderName
-            oPayload.path = path
-            oPayload.created = false
-            return new Promise(async (resolve, reject) => {
-                this.oServiceInstance.create("/createFolder", oPayload, {
-                    success: function (response) {
-                        resolve(response)
-                    },
 
-                    error: function (err) {
-                        reject(err)
-                    },
-                });
+            return await resp.json();
+        },
+
+
+        getImage: async function (foldfilename, path) {
+            const url = `${this._urlDMS}/${path}/${foldfilename}`;
+            const image = await fetch(url);
+            const imageBlob = await image.blob();
+            return URL.createObjectURL(imageBlob)
+        },
+
+        deleteFileDMS: async function (filename, path) {
+            const url = `${this._urlDMS}/${path}/${filename}`;
+            const oForm = new FormData()
+            oForm.append("cmisAction", "delete")
+
+            await fetch(url, {
+                method: 'POST',
+                body: oForm
             });
         },
-        uploadImageToFolder: function (folderPath, filename, b64Content) {
-            const oPayload = { ...this.oCredentials };
-            oPayload.content = b64Content
-            oPayload.path = folderPath
-            oPayload.name = filename
-            oPayload.created = false
-            return new Promise(async (resolve, reject) => {
-                this.oServiceInstance.create("/uploadImage", oPayload, {
-                    success: function (response) {
-                        resolve(response)
-                    },
-                    error: function (err) {
-                        reject(err)
-                    },
-                });
-            });
-        },
-        getDummy: function () {
-            this.oServiceInstance.read("/folders", {
-                success: function (res) {
-                    console.log(res)
-                },
-                error: function (err) {
-                    console.log(err)
-                }
 
-            });
-        }
-    });
+    };
 });

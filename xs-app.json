@@ -10,10 +10,10 @@
       "csrfProtection": false
     },
     {
-      "source": "^/catalog/(.*)$",
-      "target": "/catalog/$1",
-      "destination": "FILEMANANGERTE",
-      "authenticationType": "xsuaa",
+      "source": "/dms/(.*)",
+      "target": "$1",
+      "destination": "DMS_PANIOLES",
+      "authenticationType": "none",
       "csrfProtection": false
     },
     {

@@ -34,8 +34,11 @@ sap.ui.define([
 
                 // const oRequestsModel = new JSONModel({})
                 // this.getView().setModel(oRequestsModel, "requestsModel")
-                const oService = this.getOwnerComponent().getModel("dmsService")
-                this.oDMS = new DMS(oService, this.authClientHide, this.authSecretHide, this.tokenUrlHide, this.repositoryIdHide, this.dmsUrlHide)
+                //const oService = this.getOwnerComponent().getModel("dmsService")
+                const urlDMS = this.getOwnerComponent().getManifestObject().resolveUri("dms")
+                DMS.setUrl(urlDMS)
+                //this.oDMS = new DMS(oService, this.authClientHide, this.authSecretHide, this.tokenUrlHide, this.repositoryIdHide, this.dmsUrlHide)
+                this.oDMS = DMS
 
                 // const response = await this.oDMS.getImage()
                 // let image = response.results[0].image
@@ -109,12 +112,12 @@ sap.ui.define([
                         // sap.m.MessageToast.show("Material Inexistente");
                         MessageBox.error("Material inexistente");
                         return;
-                    }else
+                    } else
                         if (oMaterial.type === "") {
-                        // sap.m.MessageToast.show("Material Inexistente");
-                        MessageBox.error("Material no configurado");
-                        return;
-                    }
+                            // sap.m.MessageToast.show("Material Inexistente");
+                            MessageBox.error("Material no configurado");
+                            return;
+                        }
                     if (oMaterial.type === sTipo || (this._operation === "Prestamos" && oMaterial.type === 'SSR')) {
 
 
@@ -145,7 +148,7 @@ sap.ui.define([
             onChangeInput: function (oEvent) {
                 debugger;
                 if (oEvent.getParameter("value") > 1000) {
-                   
+
                 }
             },
 
@@ -260,8 +263,10 @@ sap.ui.define([
 
                     if (indexDoc !== "X") {
                         var path = 'root/' + elemento.pendingToDocument.results[indexDoc].documentNumber + elemento.pendingToDocument.results[indexDoc].year;
+                        //var path = elemento.pendingToDocument.results[indexDoc].documentNumber + elemento.pendingToDocument.results[indexDoc].year;
                     } else {
                         var path = 'root/' + elemento.pendingToDocument.results[0].documentNumber + elemento.pendingToDocument.results[0].year;
+                        //var path = elemento.pendingToDocument.results[0].documentNumber + elemento.pendingToDocument.results[0].year;
                     }
 
 
@@ -277,9 +282,9 @@ sap.ui.define([
                     if (indexDoc !== "X") {
                         try {
                             var response = await that.oDMS.getImage(elemento.material, path);
-                            jsonModel.URL = response.results[0].image;
+                            //jsonModel.URL = response.results[0].image;
+                            jsonModel.URL = response;
                             resolve();
-
                         } catch (error) {
                             reject();
                         }
@@ -504,10 +509,12 @@ sap.ui.define([
 
 
                                                         that.oDMS.createFolder(oResultado.documentNumber + oResultado.documentYear, "root").then((res) => {
-                                                            const folderPath = `${res.path}/${res.folderName}`
+                                                            //const folderPath = `${res.path}/${res.folderName}`
+                                                            const folderPath = `root/${oResultado.documentNumber + oResultado.documentYear}`
+
                                                             oItems.oData.MaterialesAux.forEach(function (value) {
 
-                                                                that.oDMS.uploadImageToFolder(folderPath, value.Codigo, value.URL)
+                                                                that.oDMS.uploadImageToFolder(folderPath, value.Codigo, value.File)
                                                             });
                                                             that._tengoURL = false;
                                                             // oItems.oData.MaterialesAux = null;
@@ -764,7 +771,15 @@ sap.ui.define([
 
                 this._tengoURL = true;
 
+                var binary = atob(htmlModel.takenPhoto.split(',')[1]);
+                var array = [];
+                for (var i = 0; i < binary.length; i++) {
+                    array.push(binary.charCodeAt(i));
+                }
+                var file = new Blob([new Uint8Array(array)], { type: 'image/jpeg' });
+
                 aMateriales[htmlModel.id].URL = htmlModel.takenPhoto;
+                aMateriales[htmlModel.id].File = file;
                 aMateriales[htmlModel.id].Imagen = true
                 mainModel.refresh()
                 console.log(aMateriales)
