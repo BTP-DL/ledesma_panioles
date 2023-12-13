@@ -5,7 +5,7 @@
     {
       "source": "^/sap/opu/odata/sap/ZPP_PANIOLES_SRV/(.*)$",
       "target": "/sap/opu/odata/sap/ZPP_PANIOLES_SRV/$1",
-      "destination": "DEV_MOD_250",
+      "destination": "GW_PORTAL_CC",
       "authenticationType": "xsuaa",
       "csrfProtection": false
     },

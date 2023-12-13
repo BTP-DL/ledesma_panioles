@@ -33,7 +33,7 @@ server:
           - path: /sap
             url: https://sfid.ledesma.com.ar:60500/
             client: '250'
-            destination: DEV_MOD_250
+            destination: GW_PORTAL_CC
     - name: sap-fe-mockserver
       beforeMiddleware: csp
       configuration:
